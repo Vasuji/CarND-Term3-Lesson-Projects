@@ -13,6 +13,14 @@
 
 using namespace std;
 
+static const string STATE_CONSTANT_SPEED = "CS";
+static const string STATE_KEEP_LANE = "KL";
+static const string STATE_CHANGE_LEFT = "LCL";
+static const string STATE_CHANGE_RIGHT = "LCR";
+static const string STATE_PREPARE_CHANGE_LEFT = "PLCL";
+static const string STATE_PREPARE_CHANGE_RIGHT = "PLCR";
+
+
 class Vehicle {
 public:
 
@@ -58,6 +66,8 @@ public:
     virtual ~Vehicle();
 
     void update_state(map<int, vector<vector<int> > > predictions);
+
+    string getNextState(map<int, vector<vector<int>>> map);
 
     void configure(vector<int> road_data);
 

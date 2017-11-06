@@ -2,7 +2,7 @@
 #include <random>
 #include <sstream>
 #include <fstream>
-#include <math.h>
+#include <cmath>
 #include <vector>
 #include <set>
 #include <map>

@@ -172,8 +172,6 @@ void Road::add_ego(int lane_num, int s, vector<int> config_data) {
 }
 
 void Road::cull() {
-
-
     Vehicle ego = this->vehicles.find(this->ego_key)->second;
     int center_s = ego.s;
     set<vector<int>> claimed;

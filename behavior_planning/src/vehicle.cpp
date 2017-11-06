@@ -57,7 +57,14 @@ void Vehicle::update_state(map<int, vector<vector<int> > > predictions) {
     }
 
     */
-    state = "KL"; // this is an example of how you change state.
+    bool changeRightPossible = lane > 0;
+    bool changeLeftPossible = lane < lanes_available - 1;
+
+    if (changeRightPossible) {
+        state = "LCR";
+    } else {
+        state = "KL"; // this is an example of how you change state.
+    }
 
 
 }

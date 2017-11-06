@@ -63,11 +63,10 @@ void Vehicle::update_state(map<int, vector<vector<int> > > predictions) {
     if (changeRightPossible) {
         state = "LCR";
     } else {
-        state = "KL"; // this is an example of how you change state.
+        state = "KL";
     }
-
-
 }
+
 
 void Vehicle::configure(vector<int> road_data) {
     /*
@@ -143,17 +142,17 @@ void Vehicle::realize_state(map<int, vector<vector<int> > > predictions) {
     Note - lane changes happen instantaneously.
     */
     string state = this->state;
-    if (state.compare("CS") == 0) {
+    if (state == "CS") {
         realize_constant_speed();
-    } else if (state.compare("KL") == 0) {
+    } else if (state == "KL") {
         realize_keep_lane(predictions);
-    } else if (state.compare("LCL") == 0) {
+    } else if (state == "LCL") {
         realize_lane_change(predictions, "L");
-    } else if (state.compare("LCR") == 0) {
+    } else if (state == "LCR") {
         realize_lane_change(predictions, "R");
-    } else if (state.compare("PLCL") == 0) {
+    } else if (state == "PLCL") {
         realize_prep_lane_change(predictions, "L");
-    } else if (state.compare("PLCR") == 0) {
+    } else if (state == "PLCR") {
         realize_prep_lane_change(predictions, "R");
     }
 

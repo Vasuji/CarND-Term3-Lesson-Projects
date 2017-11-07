@@ -10,7 +10,7 @@
 #include <map>
 #include <string>
 #include <iterator>
-#include "snapshot.h"
+#include "types.h"
 #include "costfunctions.h"
 
 using namespace std;
@@ -21,7 +21,6 @@ static const string STATE_CHANGE_LEFT = "LCL";
 static const string STATE_CHANGE_RIGHT = "LCR";
 static const string STATE_PREPARE_CHANGE_LEFT = "PLCL";
 static const string STATE_PREPARE_CHANGE_RIGHT = "PLCR";
-
 
 class Vehicle {
 public:
@@ -67,9 +66,9 @@ public:
     */
     virtual ~Vehicle();
 
-    void update_state(map<int, vector<vector<int> > > predictions);
+    void update_state(const Predictions &predictions);
 
-    string getNextState(map<int, vector<vector<int>>> predictions);
+    string getNextState(const Predictions &predictions);
 
     void configure(vector<int> road_data);
 
@@ -83,23 +82,27 @@ public:
 
     collider will_collide_with(Vehicle other, int timesteps);
 
-    void realize_state(map<int, vector<vector<int> > > predictions);
+    void realize_state(const Predictions &predictions);
 
     void realize_constant_speed();
 
-    int _max_accel_for_lane(map<int, vector<vector<int> > > predictions, int lane, int s);
+    int _max_accel_for_lane(const Predictions &predictions, int lane, int s);
 
-    void realize_keep_lane(map<int, vector<vector<int> > > predictions);
+    void realize_keep_lane(const Predictions &predictions);
 
-    void realize_lane_change(map<int, vector<vector<int> > > predictions, string direction);
+    void realize_lane_change(const Predictions &predictions, string direction);
 
-    void realize_prep_lane_change(map<int, vector<vector<int> > > predictions, string direction);
+    void realize_prep_lane_change(const Predictions &predictions, string direction);
 
-    vector<vector<int> > generate_predictions(int horizon);
+    Prediction generate_predictions(int horizon);
 
-    vector<Snapshot> trajectoryForState(string state, const map<int, vector<vector<int>>> &predictions);
+    Trajectory trajectoryForState(string state, const Predictions &predictions);
 
     long getMinIndex(vector<double> values);
+
+    Snapshot create_snapshot();
+
+    void restore_state_from_snapshot(Snapshot snapshot);
 };
 
 #endif

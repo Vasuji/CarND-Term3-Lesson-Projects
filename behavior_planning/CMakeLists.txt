@@ -5,5 +5,6 @@ set(SOURCE_FILES
         src/vehicle.cpp
         src/road.cpp
         src/snapshot.cpp
-        src/costfunctions.cpp)
+        src/costfunctions.cpp
+        src/trajectorydata.cpp)
 add_executable(Behavior_Planning ${SOURCE_FILES})

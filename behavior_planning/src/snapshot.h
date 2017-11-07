@@ -6,14 +6,15 @@
 using namespace std;
 
 class Snapshot {
+public:
+
     int lane;
     int s;
-    double v;
-    double a;
+    int v;
+    int a;
     string state;
 
-public:
-    Snapshot(int lane, int s, double v, double a, const string &state);
+    Snapshot(int lane, int s, int v, int a, const string &state);
 };
 
 

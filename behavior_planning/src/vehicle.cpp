@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include <iterator>
+#include <cassert>
 
 /**
  * Initializes Vehicle
@@ -23,8 +24,7 @@ Vehicle::Vehicle(int lane, int s, int v, int a) {
 
 Vehicle::~Vehicle() {}
 
-// TODO - Implement this method.
-void Vehicle::update_state(std::map<int, vector<vector<int> > > predictions) {
+void Vehicle::update_state(const Predictions &predictions) {
     /*
     Updates the "state" of the vehicle by assigning one of the
     following values to 'self.state':
@@ -62,7 +62,7 @@ void Vehicle::update_state(std::map<int, vector<vector<int> > > predictions) {
     state = getNextState(predictions);
 }
 
-string Vehicle::getNextState(const map<int, vector<vector<int>>> predictions) {
+string Vehicle::getNextState(const Predictions &predictions) {
     vector<string> possibleStates = {STATE_KEEP_LANE};
 
     bool changeRightPossible = lane > 0;
@@ -86,9 +86,48 @@ string Vehicle::getNextState(const map<int, vector<vector<int>>> predictions) {
     return possibleStates[getMinIndex(costs)];
 }
 
-vector<Snapshot> Vehicle::trajectoryForState(string state, const map<int, vector<vector<int>>> &predictions) {
+
+Snapshot Vehicle::create_snapshot() {
+    return Snapshot(lane, s, v, a, state);
+}
+
+void Vehicle::restore_state_from_snapshot(Snapshot snapshot) {
+    lane = snapshot.lane;
+    s = snapshot.s;
+    v = snapshot.v;
+    a = snapshot.a;
+    state = snapshot.state;
+}
+
+Trajectory Vehicle::trajectoryForState(string state, const Predictions &predictions) {
     int horizon = 5;
-    vector<Snapshot> trajectory;
+
+    Predictions predictionsCopy = predictions;
+
+    Snapshot snapshot = create_snapshot();
+
+    // pretend to be in new proposed state
+    this->state = state;
+    vector<Snapshot> trajectory = {snapshot};
+
+    for (int i = 0; i < horizon; i++) {
+        restore_state_from_snapshot(snapshot);
+        this->state = state;
+        realize_state(predictionsCopy);
+        assert(0 <= lane < lanes_available);
+        increment(1);
+        trajectory.push_back(create_snapshot());
+
+        // need to remove first prediction for each vehicle
+        for (auto item : predictionsCopy) {
+            Prediction prediction = item.second;
+            prediction.erase(prediction.begin());
+        }
+    }
+
+    // restore state from snapshot
+    restore_state_from_snapshot(snapshot);
+
     return trajectory;
 }
 
@@ -160,7 +199,7 @@ Vehicle::collider Vehicle::will_collide_with(Vehicle other, int timesteps) {
     return collider_temp;
 }
 
-void Vehicle::realize_state(std::map<int, vector<vector<int> > > predictions) {
+void Vehicle::realize_state(const Predictions &predictions) {
     /*
     Given a state, realize it by adjusting acceleration and lane.
     Note - lane changes happen instantaneously.
@@ -186,7 +225,7 @@ void Vehicle::realize_constant_speed() {
     a = 0;
 }
 
-int Vehicle::_max_accel_for_lane(std::map<int, vector<vector<int> > > predictions, int lane, int s) {
+int Vehicle::_max_accel_for_lane(const Predictions &predictions, int lane, int s) {
 
     int delta_v_til_target = target_speed - v;
     int max_acc = min(max_acceleration, delta_v_til_target);
@@ -227,11 +266,11 @@ int Vehicle::_max_accel_for_lane(std::map<int, vector<vector<int> > > prediction
 
 }
 
-void Vehicle::realize_keep_lane(std::map<int, vector<vector<int> > > predictions) {
+void Vehicle::realize_keep_lane(const Predictions &predictions) {
     this->a = _max_accel_for_lane(predictions, this->lane, this->s);
 }
 
-void Vehicle::realize_lane_change(std::map<int, vector<vector<int> > > predictions, string direction) {
+void Vehicle::realize_lane_change(const Predictions &predictions, string direction) {
     int delta = -1;
     if (direction == "L") {
         delta = 1;
@@ -242,7 +281,7 @@ void Vehicle::realize_lane_change(std::map<int, vector<vector<int> > > predictio
     this->a = _max_accel_for_lane(predictions, lane, s);
 }
 
-void Vehicle::realize_prep_lane_change(std::map<int, vector<vector<int> > > predictions, string direction) {
+void Vehicle::realize_prep_lane_change(const Predictions &predictions, string direction) {
     int delta = -1;
     if (direction == "L") {
         delta = 1;
@@ -299,9 +338,9 @@ void Vehicle::realize_prep_lane_change(std::map<int, vector<vector<int> > > pred
 
 }
 
-vector<vector<int> > Vehicle::generate_predictions(int horizon = 10) {
+Prediction Vehicle::generate_predictions(int horizon = 10) {
 
-    vector<vector<int> > predictions;
+    Prediction predictions;
     for (int i = 0; i < horizon; i++) {
         vector<int> check1 = state_at(i);
         vector<int> lane_s = {check1[0], check1[1]};

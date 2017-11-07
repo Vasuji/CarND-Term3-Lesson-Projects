@@ -5,11 +5,13 @@
 #include <random>
 #include <sstream>
 #include <fstream>
-#include <math.h>
+#include <cmath>
 #include <vector>
 #include <map>
 #include <string>
 #include <iterator>
+#include "snapshot.h"
+#include "costfunctions.h"
 
 using namespace std;
 
@@ -67,7 +69,7 @@ public:
 
     void update_state(map<int, vector<vector<int> > > predictions);
 
-    string getNextState(map<int, vector<vector<int>>> map);
+    string getNextState(map<int, vector<vector<int>>> predictions);
 
     void configure(vector<int> road_data);
 
@@ -95,6 +97,9 @@ public:
 
     vector<vector<int> > generate_predictions(int horizon);
 
+    vector<Snapshot> trajectoryForState(string state, const map<int, vector<vector<int>>> &predictions);
+
+    long getMinIndex(vector<double> values);
 };
 
 #endif

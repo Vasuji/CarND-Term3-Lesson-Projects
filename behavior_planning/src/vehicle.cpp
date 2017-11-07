@@ -1,5 +1,6 @@
 #include <iostream>
 #include "vehicle.h"
+#include "snapshot.h"
 #include <iostream>
 #include <cmath>
 #include <map>
@@ -61,7 +62,7 @@ void Vehicle::update_state(std::map<int, vector<vector<int> > > predictions) {
     state = getNextState(predictions);
 }
 
-string Vehicle::getNextState(std::map<int, vector<vector<int>>> map) {
+string Vehicle::getNextState(const map<int, vector<vector<int>>> predictions) {
     vector<string> possibleStates = {STATE_KEEP_LANE};
 
     bool changeRightPossible = lane > 0;
@@ -74,8 +75,21 @@ string Vehicle::getNextState(std::map<int, vector<vector<int>>> map) {
         possibleStates.push_back(STATE_CHANGE_LEFT);
     }
 
-    // TODO: evaluate possible states based on cost of each
-    return STATE_KEEP_LANE;
+    // get costs for all possible states
+    vector<double> costs;
+    for (const string &possibleState : possibleStates) {
+        vector<Snapshot> trajectory = trajectoryForState(possibleState, predictions);
+        costs.push_back(cost(*this, trajectory, predictions));
+    }
+
+    // return the state with minimum cost
+    return possibleStates[getMinIndex(costs)];
+}
+
+vector<Snapshot> Vehicle::trajectoryForState(string state, const map<int, vector<vector<int>>> &predictions) {
+    int horizon = 5;
+    vector<Snapshot> trajectory;
+    return trajectory;
 }
 
 
@@ -295,4 +309,8 @@ vector<vector<int> > Vehicle::generate_predictions(int horizon = 10) {
     }
     return predictions;
 
+}
+
+long Vehicle::getMinIndex(vector<double> values) {
+    return distance(values.begin(), min_element(values.begin(), values.end()));
 }

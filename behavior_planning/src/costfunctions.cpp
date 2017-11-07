@@ -56,6 +56,7 @@ TrajectoryData getTrajectoryData(const Vehicle &vehicle,
     vector<double> accels;
     double closest_approach = 999999;
     bool collides = false;
+    int time_until_collision = -1;
     Predictions filtered = filter_predictions_by_lane(predictions, proposed_lane);
 
     for (int i = 1; i <= PLANNING_HORIZON; i++) {
@@ -70,6 +71,7 @@ TrajectoryData getTrajectoryData(const Vehicle &vehicle,
             double last_state_s = prediction[i - 1][1]; // first is lane, second is s
             if (check_collision(snapshot, last_state_s, state_s)) {
                 collides = true;
+                time_until_collision = i;
             }
 
             double dist = abs(state_s - snapshot.s);
@@ -98,7 +100,8 @@ TrajectoryData getTrajectoryData(const Vehicle &vehicle,
             closest_approach,
             end_distance_to_goal,
             end_lanes_from_goal,
-            collides);
+            collides,
+            time_until_collision);
 }
 
 double distance_from_goal_lane(const Vehicle &vehicle,
@@ -116,6 +119,10 @@ double collision_cost(const Vehicle &vehicle,
                       const Trajectory &trajectory,
                       const Predictions &predictions,
                       const TrajectoryData &data) {
+    if (data.collides) {
+        double time_until_collision = data.time_until_collision;
+        return exp(-pow(time_until_collision, 2)) * COLLISION;
+    }
     return 0.0;
 }
 
@@ -123,21 +130,40 @@ double inefficiency_cost(const Vehicle &vehicle,
                          const Trajectory &trajectory,
                          const Predictions &predictions,
                          const TrajectoryData &data) {
-    return 0.0;
+    double speed = data.avg_speed;
+    int target_speed = vehicle.target_speed;
+    double diff = target_speed - speed;
+    double pct = diff / target_speed;
+    return pct * pct * EFFICIENCY;
 }
 
 double buffer_cost(const Vehicle &vehicle,
                    const Trajectory &trajectory,
                    const Predictions &predictions,
                    const TrajectoryData &data) {
-    return 0.0;
+    double closest = data.closest_approach;
+    if (abs(closest) <= 0.000001) {
+        return 10 * DANGER;
+    }
+
+    double timesteps_away = closest / data.avg_speed;
+    if (timesteps_away > DESIRED_BUFFER) {
+        return 0.0;
+    }
+
+    double multiplier = pow(1.0 - timesteps_away / DESIRED_BUFFER, 2);
+    return multiplier * DANGER;
 }
 
 double change_lane_cost(const Vehicle &vehicle,
                         const Trajectory &trajectory,
                         const Predictions &predictions,
                         const TrajectoryData &data) {
-    return 0.0;
+    int currentLane = trajectory[0].lane;
+    if (data.end_lanes_from_goal > currentLane) {
+        return COMFORT;
+    }
+    return -COMFORT;
 }
 
 

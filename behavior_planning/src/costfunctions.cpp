@@ -3,17 +3,6 @@
 const double DESIRED_BUFFER = 1.5;
 const int PLANNING_HORIZON = 2;
 
-double distance_from_goal_lane(const Vehicle &vehicle,
-                               const Trajectory &trajectory,
-                               const Predictions &predictions,
-                               const TrajectoryData &data) {
-    double distance = abs(data.end_distance_to_goal);
-    distance = max(distance, 1.0);
-    double time_to_goal = distance / data.avg_speed;
-    double multiplier = 5 * data.end_lanes_from_goal / time_to_goal;
-    return multiplier * REACH_GOAL;
-}
-
 Predictions filter_predictions_by_lane(const Predictions &predictions, int lane) {
     Predictions predictionsInLane;
 
@@ -32,9 +21,9 @@ Predictions filter_predictions_by_lane(const Predictions &predictions, int lane)
 
 bool check_collision(const Snapshot &snapshot, double s_previous, double s_now) {
     double
-        s = snapshot.s,
-        v = snapshot.v,
-        v_other = s_now - s_previous;
+            s = snapshot.s,
+            v = snapshot.v,
+            v_other = s_now - s_previous;
 
     if (s_previous < s) {
         return s_now >= s;
@@ -112,13 +101,56 @@ TrajectoryData getTrajectoryData(const Vehicle &vehicle,
             collides);
 }
 
+double distance_from_goal_lane(const Vehicle &vehicle,
+                               const Trajectory &trajectory,
+                               const Predictions &predictions,
+                               const TrajectoryData &data) {
+    double distance = abs(data.end_distance_to_goal);
+    distance = max(distance, 1.0);
+    double time_to_goal = distance / data.avg_speed;
+    double multiplier = 5 * data.end_lanes_from_goal / time_to_goal;
+    return multiplier * REACH_GOAL;
+}
+
+double collision_cost(const Vehicle &vehicle,
+                      const Trajectory &trajectory,
+                      const Predictions &predictions,
+                      const TrajectoryData &data) {
+    return 0.0;
+}
+
+double inefficiency_cost(const Vehicle &vehicle,
+                         const Trajectory &trajectory,
+                         const Predictions &predictions,
+                         const TrajectoryData &data) {
+    return 0.0;
+}
+
+double buffer_cost(const Vehicle &vehicle,
+                   const Trajectory &trajectory,
+                   const Predictions &predictions,
+                   const TrajectoryData &data) {
+    return 0.0;
+}
+
+double change_lane_cost(const Vehicle &vehicle,
+                        const Trajectory &trajectory,
+                        const Predictions &predictions,
+                        const TrajectoryData &data) {
+    return 0.0;
+}
+
 
 double cost(const Vehicle &vehicle,
             const Trajectory &trajectory,
             const Predictions &predictions) {
 
     vector<CostFunction> costFunctions = {
-            distance_from_goal_lane
+            distance_from_goal_lane,
+            collision_cost,
+            inefficiency_cost,
+            buffer_cost,
+            change_lane_cost
     };
 
     double cost = 0.0;
